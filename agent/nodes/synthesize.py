@@ -1,28 +1,30 @@
 """
 Node: synthesize
-Uses Claude to:
+Uses Groq (Llama 3.3 70b) to:
   1. Generate plain-English summaries for each PR
   2. Extract action items from emails
   3. Write the full daily brief body
 """
 
 import json
-import anthropic
+from groq import Groq
 from agent.state import AgentState
 from agent.prompts import PR_SUMMARY_SYSTEM, EMAIL_EXTRACTION_SYSTEM, DAILY_BRIEF_SYSTEM
-from config import ANTHROPIC_API_KEY, CLAUDE_MODEL, GITHUB_USERNAME
+from config import GROQ_API_KEY, GROQ_MODEL, GITHUB_USERNAME
 
-client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
+client = Groq(api_key=GROQ_API_KEY)
 
 
-def _call_claude(system: str, user: str, max_tokens: int = 1024) -> str:
-    resp = client.messages.create(
-        model=CLAUDE_MODEL,
+def _call_groq(system: str, user: str, max_tokens: int = 1024) -> str:
+    resp = client.chat.completions.create(
+        model=GROQ_MODEL,
         max_tokens=max_tokens,
-        system=system,
-        messages=[{"role": "user", "content": user}],
+        messages=[
+            {"role": "system", "content": system},
+            {"role": "user", "content": user},
+        ],
     )
-    return resp.content[0].text.strip()
+    return resp.choices[0].message.content.strip()
 
 
 def _summarize_prs(state: AgentState) -> dict[int, str]:
@@ -31,15 +33,12 @@ def _summarize_prs(state: AgentState) -> dict[int, str]:
 
     prs_text = "\n\n".join(
         f"PR #{pr['number']} — {pr['title']}\n"
-        f"Repo: {pr['repo']}\n"
-        f"Author: {pr['author']}\n"
+        f"Repo: {pr['repo']}\nAuthor: {pr['author']}\n"
         f"Files changed: {pr['files_changed']}, Lines: {pr['lines_changed']}\n"
         f"URL: {pr['url']}"
         for pr in state["pull_requests"]
     )
-    raw = _call_claude(PR_SUMMARY_SYSTEM, f"Summarize these PRs:\n\n{prs_text}", max_tokens=1024)
-
-    # Build a simple map: try to associate each paragraph with a PR number
+    raw = _call_groq(PR_SUMMARY_SYSTEM, f"Summarize these PRs:\n\n{prs_text}")
     summaries: dict[int, str] = {}
     paragraphs = [p.strip() for p in raw.split("\n\n") if p.strip()]
     for i, pr in enumerate(state["pull_requests"]):
@@ -52,18 +51,12 @@ def _extract_email_tasks(state: AgentState) -> list[dict]:
         return []
 
     emails_text = "\n\n".join(
-        f"Subject: {e['subject']}\nFrom: {e['sender']}\nReceived: {e['received']}\nSnippet: {e['snippet']}"
+        f"Subject: {e['subject']}\nFrom: {e['sender']}\n"
+        f"Received: {e['received']}\nSnippet: {e['snippet']}"
         for e in state["emails"]
     )
-    raw = _call_claude(EMAIL_EXTRACTION_SYSTEM, f"Extract action items from these emails:\n\n{emails_text}")
-
-    raw = raw.strip()
-    if raw.startswith("```"):
-        raw = raw.split("```")[1]
-        if raw.startswith("json"):
-            raw = raw[4:]
-    raw = raw.strip()
-
+    raw = _call_groq(EMAIL_EXTRACTION_SYSTEM, f"Extract action items:\n\n{emails_text}")
+    raw = raw.strip().lstrip("```json").lstrip("```").rstrip("```").strip()
     try:
         return json.loads(raw)
     except Exception:
@@ -71,9 +64,8 @@ def _extract_email_tasks(state: AgentState) -> list[dict]:
 
 
 def _generate_brief(state: AgentState, pr_summaries: dict[int, str], email_tasks: list[dict]) -> str:
-    # Build a rich context block for the brief prompt
     cal_text = "\n".join(
-        f"- {e['start']} → {e['title']} ({', '.join(e['attendees'][:3]) if e['attendees'] else 'no attendees'})"
+        f"- {e['start']} → {e['title']}"
         for e in state["calendar_events"]
     ) or "No meetings today."
 
@@ -93,20 +85,17 @@ def _generate_brief(state: AgentState, pr_summaries: dict[int, str], email_tasks
     ) or "No open issues assigned."
 
     user_prompt = (
-        f"Date: {state['target_date']}\n"
-        f"Developer: {GITHUB_USERNAME}\n\n"
+        f"Date: {state['target_date']}\nDeveloper: {GITHUB_USERNAME}\n\n"
         f"CALENDAR:\n{cal_text}\n\n"
         f"EMAILS NEEDING ACTION:\n{email_text}\n\n"
         f"PULL REQUESTS:\n{pr_text}\n\n"
         f"GITHUB ISSUES:\n{issues_text}\n"
     )
-
     system = DAILY_BRIEF_SYSTEM.replace("{name}", GITHUB_USERNAME)
-    return _call_claude(system, user_prompt, max_tokens=2048)
+    return _call_groq(system, user_prompt, max_tokens=2048)
 
 
 def synthesize_node(state: AgentState) -> AgentState:
-    """LangGraph node — synthesizes all collected data into a full daily brief."""
     errors = list(state.get("errors", []))
     pr_summaries: dict[int, str] = {}
     email_tasks: list[dict] = []
@@ -116,17 +105,15 @@ def synthesize_node(state: AgentState) -> AgentState:
         pr_summaries = _summarize_prs(state)
     except Exception as e:
         errors.append(f"Synthesis (PR summaries): {e}")
-
     try:
         email_tasks = _extract_email_tasks(state)
     except Exception as e:
         errors.append(f"Synthesis (email tasks): {e}")
-
     try:
         brief_markdown = _generate_brief(state, pr_summaries, email_tasks)
     except Exception as e:
         errors.append(f"Synthesis (brief): {e}")
-        brief_markdown = f"# Daily Brief — {state['target_date']}\n\n*Brief generation failed. Check logs.*"
+        brief_markdown = f"# Daily Brief — {state['target_date']}\n\n*Brief generation failed.*"
 
     return {
         **state,
@@ -135,3 +122,4 @@ def synthesize_node(state: AgentState) -> AgentState:
         "brief_markdown": brief_markdown,
         "errors": errors,
     }
+    

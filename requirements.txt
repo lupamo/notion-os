@@ -1,7 +1,10 @@
 fastapi
-uvicorn
+uvicorn[standard]
 langgraph
-langchain-anthropic
-anthropic
+groq
 httpx
 python-dotenv
+notion-client
+google-auth
+google-auth-oauthlib
+google-api-python-client

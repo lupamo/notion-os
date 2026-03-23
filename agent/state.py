@@ -1,7 +1,7 @@
-from typing import TypeDict, Optional
+from typing import TypedDict, Optional
 from datetime import date
 
-class PRItem(TypeDict):
+class PRItem(TypedDict):
 	title: str
 	repo: str
 	author: str
@@ -12,14 +12,14 @@ class PRItem(TypeDict):
 	updated: str
 	number: int
 
-class EmailItem(TypeDict):
+class EmailItem(TypedDict):
 	subject: str
 	sender: str
 	snippet: str
 	received: str
 	thread_id: str
 
-class CalendarEvent(TypeDict):
+class CalendarEvent(TypedDict):
 	title: str
 	start: str
 	end: str
@@ -27,7 +27,7 @@ class CalendarEvent(TypeDict):
 	location: Optional[str]
 	description: Optional[str]
 
-class GithubIssue(TypeDict):
+class GithubIssue(TypedDict):
 	title: str
 	repo: str
 	number: int
@@ -36,7 +36,7 @@ class GithubIssue(TypeDict):
 	labels: list[str]
 	created: str
 
-class AgentState(TypeDict):
+class AgentState(TypedDict):
 	target_date: str
 	pull_requests: list[PRItem]
 	github_issues: list[GithubIssue]

@@ -2,6 +2,7 @@
 LangGraph state machine definition for Notion OS
 """
 
+from asyncio import graph
 from datetime import date
 from langgraph.graph import StateGraph, START, END
 
@@ -24,13 +25,10 @@ def build_graph() -> StateGraph:
 
 	#Fan out from start to all data sources
 	graph.add_edge(START, "github")
-	graph.add_edge(START, "gmail")
-	graph.add_edge(START, "gcal")
-
-	#Fan in from all data sources to synthesize
-	graph.add_edge("github", "synthesize")
-	graph.add_edge("gmail", "synthesize")
+	graph.add_edge("github", "gmail")
+	graph.add_edge("gmail", "gcal")
 	graph.add_edge("gcal", "synthesize")
+
 
 	#Then to notion writer and end
 	graph.add_edge("synthesize", "notion_writer")

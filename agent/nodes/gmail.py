@@ -1,83 +1,64 @@
 """
 Node: gmail
-Calls the Anthropic API with the Gmail MCP server attached to fetch and
-filter action-needed emails from the last 24 hours.
+Fetches action-needed emails from the last 24 hours using Gmail API directly.
 """
 
-import json
-import anthropic
+import pickle
+import base64
+import os
+from datetime import datetime, timedelta, timezone
+from google.auth.transport.requests import Request
+from googleapiclient.discovery import build
 from agent.state import AgentState, EmailItem
-from config import ANTHROPIC_API_KEY, CLAUDE_MODEL
 
-GMAIL_MCP_URL = "https://gmail.mcp.claude.com/mcp"
+TOKEN_PATH = "token.pickle"
 
-SYSTEM_PROMPT = """You are an email triage assistant. 
-Use the Gmail tools to search for unread or recent emails from the last 24 hours.
-Focus on emails that require action, a reply, or contain important information.
-Ignore newsletters, notifications, and automated emails.
 
-Return ONLY a valid JSON array with this exact structure — no markdown, no explanation:
-[
-  {
-    "subject": "...",
-    "sender": "Name <email@example.com>",
-    "snippet": "...",
-    "received": "...",
-    "thread_id": "..."
-  }
-]
+def _get_gmail_service():
+    with open(TOKEN_PATH, "rb") as f:
+        creds = pickle.load(f)
+    if creds.expired and creds.refresh_token:
+        creds.refresh(Request())
+        with open(TOKEN_PATH, "wb") as f:
+            pickle.dump(creds, f)
+    return build("gmail", "v1", credentials=creds)
 
-If there are no action-needed emails, return an empty array: []
-"""
+
+def _decode_snippet(snippet: str) -> str:
+    return snippet or ""
 
 
 def gmail_node(state: AgentState) -> AgentState:
-    """LangGraph node — fetches action-needed emails via Gmail MCP."""
     errors = list(state.get("errors", []))
     emails: list[EmailItem] = []
 
     try:
-        client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
-        response = client.beta.messages.create(
-            model=CLAUDE_MODEL,
-            max_tokens=2048,
-            system=SYSTEM_PROMPT,
-            messages=[
-                {
-                    "role": "user",
-                    "content": (
-                        f"Fetch action-needed emails from the last 24 hours for {state['target_date']}. "
-                        "Return only the JSON array as instructed."
-                    ),
-                }
-            ],
-            mcp_servers=[
-                {"type": "url", "url": GMAIL_MCP_URL, "name": "gmail"}
-            ],
-            betas=["mcp-client-2025-04-04"],
-        )
+        service = _get_gmail_service()
+        # Search for unread emails from last 24h, excluding promotions/social
+        query = "is:unread newer_than:1d -category:promotions -category:social"
+        result = service.users().messages().list(
+            userId="me", q=query, maxResults=15
+        ).execute()
 
-        raw = ""
-        for block in response.content:
-            if block.type == "text":
-                raw += block.text
+        messages = result.get("messages", [])
+        for msg in messages:
+            detail = service.users().messages().get(
+                userId="me", messageId=msg["id"], format="metadata",
+                metadataHeaders=["Subject", "From", "Date"]
+            ).execute()
 
-        raw = raw.strip()
-        if raw.startswith("```"):
-            raw = raw.split("```")[1]
-            if raw.startswith("json"):
-                raw = raw[4:]
-        raw = raw.strip()
+            headers = {h["name"]: h["value"] for h in detail["payload"]["headers"]}
+            emails.append(EmailItem(
+                subject=headers.get("Subject", "(no subject)"),
+                sender=headers.get("From", "Unknown"),
+                snippet=detail.get("snippet", "")[:200],
+                received=headers.get("Date", ""),
+                thread_id=detail.get("threadId", ""),
+            ))
 
-        parsed = json.loads(raw)
-        emails = [EmailItem(**item) for item in parsed if isinstance(item, dict)]
-
+    except FileNotFoundError:
+        errors.append("Gmail node: token.pickle not found — run auth_setup.py first")
     except Exception as e:
         errors.append(f"Gmail node: {e}")
 
-    return {
-        **state,
-        "emails": emails,
-        "errors": errors,
-    }
-
+    return {**state, "emails": emails, "errors": errors}
