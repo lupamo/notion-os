@@ -18,7 +18,7 @@ from config import (
 notion = Client(auth=NOTION_API_KEY)
 
 
-# ── Helpers ─────────────────────────────────────────────────────────────────
+# ── Helpers 
 
 def _markdown_to_notion_blocks(md: str) -> list[dict]:
     """
@@ -91,7 +91,7 @@ def _prop_date(date_str: str) -> dict:
     return {"date": {"start": date_str}}
 
 
-# ── Writers ──────────────────────────────────────────────────────────────────
+# ── Writers
 
 def write_daily_brief(state: AgentState) -> str:
     """Creates a Daily Brief page in the Daily Briefs database."""
