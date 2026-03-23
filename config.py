@@ -21,6 +21,3 @@ GITHUB_USERNAME = os.getenv("GITHUB_USERNAME")
 
 GITHUB_REPOS    = [r.strip() for r in os.getenv("GITHUB_REPOS", "").split(",") if r.strip()]
 
-# ── Model 
-CLAUDE_MODEL    = "claude-sonnet-4-20250514"
-MAX_TOKENS      = 2048

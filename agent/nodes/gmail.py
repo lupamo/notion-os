@@ -43,7 +43,7 @@ def gmail_node(state: AgentState) -> AgentState:
         messages = result.get("messages", [])
         for msg in messages:
             detail = service.users().messages().get(
-                userId="me", messageId=msg["id"], format="metadata",
+                userId="me", id=msg["id"], format="metadata",
                 metadataHeaders=["Subject", "From", "Date"]
             ).execute()
 
