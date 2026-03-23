@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>Notion OS</title>
+</head>
+<body>
+	<div class="container">
+		<div class="header">
+			<div class="logo">Notion <span>OS</span></div>
+		</div>
+		<div class="tagline">AI-powered Notion productivity assistant</div>
+	</div>
+	<div class="datebar">
+		<div class="dot"></div>
+		<span class="current date"></span>
+	</div>
+
+	<div class="run-section">
+		<button class="run-btn" id="run-btn" onclick="runBrief()">
+			<span>▶</span>
+			<span id="run-btn-text">Run Brief</span>
+		</button>
+	</div>
+
+	<div class="pipeline">
+		<div class="pipline-header">Agent Pipeline</div>
+		<div class="node" id="node-github">
+			<div class="node-indicator"></div>
+			<div class="node-name">GitHub</div>
+			<div class="node-status" id="status-github">idle</div>
+		</div>
+		<div class="node" id="node-gmail">
+			<div class="node-indicator"></div>
+			<div class="node-name">Gmail</div>
+			<div class="node-status" id="status-gmail">idle</div>
+		</div>
+		<div class="node" id="node-gcal">
+			<div class="node-indicator"></div>
+			<div class="node-name">Google Calendar</div>
+			<div class="node-status" id="status-gcal">idle</div>
+		</div>
+		<div class="node" id="node-synthesize">
+			<div class="node-indicator"></div>
+			<div class="node-name">Synthesize</div>
+			<div class="node-status" id="status-synthesize">idle</div>
+		</div>
+		<div class="node" id="node-notion">
+			<div class="node-indicator"></div>
+			<div class="node-name">Notion</div>
+			<div class="node-status" id="status-notion">idle</div>
+		</div>
+	</div>
+
+	<div class="log" id="log"></div>
+	<div class="results" id="results">
+		<div class="results-header">Results</div>
+		<div class="stats-grid">
+			<div class="stat">
+				<div class="stat-value" id="stat-emails">0</div>
+				<div class="stat-label">Email Processed</div>
+			</div>
+			<div class="stat">
+				<div class="stat-value" id="stat-prs">0</div>
+				<div class="stat-label">PRs Fetched</div>
+			</div>
+			<div class="stat">
+				<div class="stat-value" id="stat-issues">0</div>
+				<div class="stat-label">Issues Found</div>
+			</div>
+			<div class="stat">
+				<div class="stat-value" id="stat-tasks">0</div>
+				<div class="stat-label">Tasks Created</div>
+			</div>
+			<div class="stat">
+				<div class="stat-value" id="stat-pr-cards">0</div>
+				<div class="stat-label">PR Cards</div>
+			</div>
+			<div class="stat">
+				<div class="stat-value" id="stat-errors">0</div>
+				<div class="stat-label">Errors</div>
+			</div>
+		</div>
+		<a class="notion-link" id="notion-link" href="#" target="_blank" style="display:none">
+			<div class="notion-link-icon">📄</div>
+			<div class="notion-link-text">
+				<div class="notion-link-title">Open Daily Brief in Notion</div>
+				<div class="notion-link-sub" id="notion-link-sub">-</div>
+			</div>
+			<div class="notion-link-arrow">-></div>
+		</a>
+	</div>
+	<div class="error-box" id="error-box"></div>
+	
+</body>
+</html>
