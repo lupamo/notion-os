@@ -3,7 +3,7 @@
 
 > One button, One Brief, Your entire day Organized.
 
-![Notion OS Demo](https://img.shields.io/badge/▶_Watch_Demo-FF0000?style=for-the-badge&logo=youtube&logoColor=white)](https://youtu.be/6Bs3JRc3f2I)
+[![Watch Demo](https://raw.githubusercontent.com/lupamo/notion-os/main/thumbnail.jpg)](https://youtu.be/6Bs3JRc3f2I)
 
 ![Python](https://img.shields.io/badge/Python-3.11+-3776AB?style=flat-square&logo=python&logoColor=white)
 ![FastAPI](https://img.shields.io/badge/FastAPI-009688?style=flat-square&logo=fastapi&logoColor=white)
