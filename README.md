@@ -12,16 +12,18 @@
 ![Groq](https://img.shields.io/badge/Groq_Llama_3.3-F55036?style=flat-square)
 
 ## The problem
-As an opensource contributor waking up and getting up to date with your development work mostly involves opening multiple tabs by visiting different app, Gmail, GitHub, google calendar etc.
+As an open source contributor, getting up to speed every morning mostly involves opening multiple tabs across different app, Gmail, GitHub, google calendar  before you've written a single line of code.
+
 A typical morning would go like this:
-- 15 unread emails — decide which ones actually need a reply?
+- 29 unread emails — decide which ones actually need a reply?
 - 3 open PRs across 2 repos — which one is blocking someone?
 - 4 meetings — did you prep for the 9am standup?
 - 6 assigned issues — which one is P0?
 
 ## The Solution
 Notion Os helps solve this hustle!
-Notion Os is a multi-agent pipeline that sweeps across your GitHub, Gmail and Google calendar, synthesizes everything with AI and writes a fully structured briefing into your Notion Workspace
+Notion Os is a multi-agent pipeline that sweeps across your GitHub, Gmail and Google calendar, synthesizes everything with AI and writes a fully structured briefing into your Notion Workspace before you've have your first coffee.
+
 
 **Three things get written to Notion on every run.**
 
@@ -43,7 +45,7 @@ Notion Os is a multi-agent pipeline that sweeps across your GitHub, Gmail and Go
 | GitHub Data | GitHub REST API |
 | Email Data | Gmail API (OAuth) |
 | Calendar Data | Google Calendar API (OAuth) |
-| Notion Output | Notion MCP + `notion-client` |
+| Notion Output | [Notion MCP](https://developers.notion.com) via `mcp` Python client |
 | Backend | FastAPI + Python 3.11+ |
 | Frontend | Vanilla HTML/CSS/JS |
 
@@ -52,6 +54,7 @@ Notion Os is a multi-agent pipeline that sweeps across your GitHub, Gmail and Go
 
 ```bash
 python --version   # 3.11+
+node --version #18+ (for Notion MCP Server)
 ```
 
 ### 1. Clone the Repo
@@ -66,6 +69,7 @@ python -m venv .venv
 source .venv/bin/activate 
 
 pip install -r requirements.txt
+npm install -g @notionhq/notion-mcp-server
 ```
 
 ### 3. Set up enviroment Variables
