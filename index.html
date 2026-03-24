@@ -14,13 +14,13 @@
 	</div>
 	<div class="datebar">
 		<div class="dot"></div>
-		<span class="current date"></span>
+		<span id="current-date"></span>
 	</div>
 
 	<div class="run-section">
 		<button class="run-btn" id="run-btn" onclick="runBrief()">
 			<span>▶</span>
-			<span id="run-btn-text">Run Brief</span>
+			<span id="btn-text">Run Brief</span>
 		</button>
 	</div>
 
@@ -92,6 +92,121 @@
 		</a>
 	</div>
 	<div class="error-box" id="error-box"></div>
-	
+	<script>
+		const now = new Date();
+		document.getElementById('current-date').textContent = now.toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+
+		const PIPELINE = ["github", "gmail", "gcal", "synthesize", "notion"];
+		const PIPELINE_LABELS = {
+			github: 'Fetching PRS & Issues...',
+			gmail: 'Reading Emails....',
+			gcal: 'Checking Calendar...',
+			synthesize: 'Synthesizing with Llama...',
+			notion: 'Writing to Notion...'
+		}
+
+		let animTimer = null;
+
+		function setNodes(id, state, msg) {
+			document.getElementById(`node-${id}`).className = `node ${state}`;
+			document.getElementById(`status-${id}`).textContent = msg;
+		}
+		function resetNodes() {
+			PIPELINE.forEach(id => setNodes(id, "", "idle"));
+		}
+
+		function addLog(msg, type= '') {
+			const log = document.getElementById('log');
+			log.classList.add('visible');
+			const time = new Date().toLocaleTimeString('en-US', { hour12: false });
+			const line = document.createElement('div');
+			line.className = `log-line ${type}`;
+			line.innerHTML = `<span class="log-time">${time}</span><span class="log-msg">${msg}</span>`;
+			log.appendChild(line);
+			log.scrollTop = log.scrollHeight;
+		}
+
+		async function runBrief() {
+			const btn = document.getElementById('run-btn');
+			const btnText = document.getElementById('btn-text');
+			const results = document.getElementById('results');
+			const errorBox = document.getElementById('error-box');
+
+			btn.disabled = true;
+			btnText.textContent = "Running...";
+			resetNodes();
+			results.classList.remove('visible');
+			errorBox.classList.remove('visible');
+			document.getElementById('log').innerHTML = '';
+			document.getElementById('notion-link').style.display = 'none';
+
+			addLog("Starting Notion OS agent...");
+
+			let nodeIndex = 0;
+			animTimer = setInterval(() => {
+				if (nodeIndex > 0) setNodes(PIPELINE[nodeIndex - 1], 'active', PIPELINE_LABELS[PIPELINE[nodeIndex - 1]]);
+				if (nodeIndex < PIPELINE.length) {
+					addLog(`Running ${PIPELINE[nodeIndex]} node...`);
+					nodeIndex++;
+				} else {
+					clearInterval(animTimer);
+				}
+			}, 900);
+
+			try {
+				const res = await fetch('http://localhost:8000/run-brief', { 
+					method: 'POST',
+					headers: { 'Content-Type': 'application/json' },
+					body: JSON.stringify({})
+				});
+				clearInterval(animTimer);
+
+				if (!res.ok) {
+					throw new Error(`HTTP ${res.status}: ${res.statusText}`);
+				}
+
+				const data = await res.json();
+
+				PIPELINE.forEach(id => setNodes(id, 'done', 'done'));
+
+				document.getElementById('stat-emails').textContent = data.emails_processed ?? 0;
+				document.getElementById('stat-prs').textContent = data.prs_processed?? 0;
+				document.getElementById('stat-issues').textContent = data.issues_processed ?? 0;
+				document.getElementById('stat-tasks').textContent = data.tasks_created ?? 0;
+				document.getElementById('stat-pr-cards').textContent = data.pr_cards_created ?? 0;
+				document.getElementById('stat-errors').textContent = data.errors?.length ?? 0;
+
+				results.classList.add('visible');
+				addLog(`Brief complete → ${data.emails_processed} emails, ${data.prs_processed} PRs, ${data.tasks_created} tasks`, 'success');
+
+				if (data.notion_brief_page_id) {
+					const pageId = data.notion_brief_page_id.replace(/-/g, "");
+					const link = document.getElementById('notion-link');
+					link.style.display = 'flex';
+					document.getElementById('notion-link-sub').textContent = `Daily Brief - ${data.target_date}`;
+					addLog('Brief page created in Notion', 'success');
+				}
+
+				if (data.errors?.length) {
+					errorBox.innerHTML = data.errors.map(e => `${e}`).join('<br/>');
+					errorBox.classList.add('visible');
+					data.errors.forEach(e => addLog(e, 'error'));
+				}
+			}
+			catch (err) {
+				clearInterval(animTimer);
+				PIPELINE.forEach(id => setNodes(id, '', 'idle'));
+				errorBox.textContent = `✗ ${err.message}`;
+				errorBox.classList.add('visible');
+				addLog(err.message, 'error');
+			}
+			finally {
+				btn.disabled = false;
+      			btnText.textContent = 'Run Morning Brief';
+
+			}
+		}
+
+	</script>
 </body>
 </html>
