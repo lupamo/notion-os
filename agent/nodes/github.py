@@ -20,7 +20,7 @@ def _format_dt(iso: str) -> str:
     """Return a short human-readable date string."""
     try:
         dt = datetime.fromisoformat(iso.replace("Z", "+00:00"))
-        return dt.strftime("%b %d, %Y")
+        return dt.strftime("%Y-%m-%d")
     except Exception:
         return iso
 
