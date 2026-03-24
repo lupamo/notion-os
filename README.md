@@ -174,11 +174,3 @@ uvicorn api.main:app --reload --port 8000
 ### Open the frontend
 
 Open `index.html` in your browser (double-click the file).
-
-### Trigger a brief
-
-Click **▶ Run Morning Brief** — or via curl:
-
-```bash
-curl -X POST http://localhost:8000/run-brief
-```
