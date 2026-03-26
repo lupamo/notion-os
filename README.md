@@ -22,7 +22,7 @@ A typical morning would go like this:
 
 ## The Solution
 Notion Os helps solve this hustle!
-Notion Os is a multi-agent pipeline that sweeps across your GitHub, Gmail and Google calendar, synthesizes everything with AI and writes a fully structured briefing into your Notion Workspace before you've have your first coffee.
+Notion Os is a multi-agent pipeline that sweeps across your GitHub, Gmail and Google calendar, synthesizes everything with AI and writes a fully structured briefing into your Notion Workspace before you have your first coffee.
 
 
 **Three things get written to Notion on every run.**
