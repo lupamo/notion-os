@@ -12,7 +12,7 @@
 ![Groq](https://img.shields.io/badge/Groq_Llama_3.3-F55036?style=flat-square)
 
 ## The problem
-As an open source contributor, getting up to speed every morning mostly involves opening multiple tabs across different app, Gmail, GitHub, google calendar  before you've written a single line of code.
+As an open source contributor, getting up to speed every morning mostly involves opening multiple tabs across different applications; Gmail, GitHub, google calendar  before you've written a single line of code.
 
 A typical morning would go like this:
 - 29 unread emails — decide which ones actually need a reply?
@@ -22,7 +22,7 @@ A typical morning would go like this:
 
 ## The Solution
 Notion Os helps solve this hustle!
-Notion Os is a multi-agent pipeline that sweeps across your GitHub, Gmail and Google calendar, synthesizes everything with AI and writes a fully structured briefing into your Notion Workspace before you've have your first coffee.
+Notion Os is a multi-agent pipeline that sweeps across your GitHub, Gmail and Google calendar, synthesizes everything with AI and writes a fully structured briefing into your Notion Workspace before you have your first coffee.
 
 
 **Three things get written to Notion on every run.**
