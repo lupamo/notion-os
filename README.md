@@ -79,7 +79,7 @@ cp .env.example .env
 
 Fill in your '.env':
 ```bash
-GROQ_API_KEY=gsk_...         # console.groq.com/keys — free
+GROQ_API_KEY=gsk_...         # console.groq.com/keys  free
 NOTION_API_KEY=secret_...    # notion.so/my-integrations
 GITHUB_TOKEN=github_pat_...  # GitHub -> Settings -> Developer Settings -> PAT
 GITHUB_USERNAME=your-username
@@ -138,9 +138,7 @@ Create a parent page called **Notion OS** in Notion with these three databases i
 | AI Summary | Rich Text |
 | Opened | Date |
 
-For each page: click `...` → **Connections** → select your `Notion OS` integration.
 
-Update `config.py` with your database IDs (found in the Notion page URLs):
 
 ```python
 NOTION_DAILY_BRIEFS_DB = "your-database-id"
